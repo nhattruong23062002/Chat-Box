@@ -1,4 +1,5 @@
 require("dotenv").config();
+var request = require('request');
 
 function handleMessage(sender_psid, received_message) {
   let response;
