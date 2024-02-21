@@ -3,4 +3,6 @@ extends layout
 block content
   h1= title
   p Welcome to #{title}
-  h4 chào bạn
+  form(method="POST", action="/webhook/setup-profile")
+    button(type="submit") Get started
+  

@@ -1,48 +1,51 @@
 require("dotenv").config();
 var request = require("request");
+const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 
 function handleMessage(sender_psid, received_message) {
-    let response;
-  
-    // Checks if the message contains text
-    if (received_message.text) {    
-      // Create the payload for a basic text message, which
-      // will be added to the body of our request to the Send API
-      response = {
-        "text": `You sent the message: "${received_message.text}". Now send me an attachment!`
-      }
-    } else if (received_message.attachments) {
-      // Get the URL of the message attachment
-      let attachment_url = received_message.attachments[0].payload.url;
-      response = {
-        "attachment": {
-          "type": "template",
-          "payload": {
-            "template_type": "generic",
-            "elements": [{
-              "title": "Is this the right picture?",
-              "subtitle": "Tap a button to answer.",
-              "image_url": attachment_url,
-              "buttons": [
+  let response;
+
+  // Checks if the message contains text
+  if (received_message.text) {
+    // Create the payload for a basic text message, which
+    // will be added to the body of our request to the Send API
+    response = {
+      text: `You sent the message: "${received_message.text}". Now send me an attachment!`,
+    };
+  } else if (received_message.attachments) {
+    // Get the URL of the message attachment
+    let attachment_url = received_message.attachments[0].payload.url;
+    response = {
+      attachment: {
+        type: "template",
+        payload: {
+          template_type: "generic",
+          elements: [
+            {
+              title: "Is this the right picture?",
+              subtitle: "Tap a button to answer.",
+              image_url: attachment_url,
+              buttons: [
                 {
-                  "type": "postback",
-                  "title": "Yes!",
-                  "payload": "yes",
+                  type: "postback",
+                  title: "Yes!",
+                  payload: "yes",
                 },
                 {
-                  "type": "postback",
-                  "title": "No!",
-                  "payload": "no",
-                }
+                  type: "postback",
+                  title: "No!",
+                  payload: "no",
+                },
               ],
-            }]
-          }
-        }
-      }
-    } 
-    
-    // Send the response message
-    callSendAPI(sender_psid, response);   
+            },
+          ],
+        },
+      },
+    };
+  }
+
+  // Send the response message
+  callSendAPI(sender_psid, response);
 }
 
 function handlePostback(sender_psid, received_postback) {
@@ -136,5 +139,32 @@ module.exports = {
       // Return a '404 Not Found' if event is not from a page subscription
       res.sendStatus(404);
     }
+  },
+
+  setupProfile: async function (req, res, next) {
+    let request_body = {
+      get_started: { payload: "GET_STARTED" },
+      whitelisted_domains: ["https://chatbox-b5h1.onrender.com/"],
+    };
+
+    // Send the HTTP request to the Messenger Platform
+    await request(
+      {
+        uri: `https://graph.facebook.com/v18.0/me/messenger_profile?access_token=${PAGE_ACCESS_TOKEN}`,
+        qs: { access_token: PAGE_ACCESS_TOKEN },
+        method: "POST",
+        json: request_body,
+      },
+      (err, res, body) => {
+        console.log("««««« body »»»»»", body);
+        if (!err) {
+          console.log("setup profile success!");
+        } else {
+          console.error("Unable to send message:" + err);
+        }
+      }
+    );
+
+    return res.send("Chào mừng bạn đến với Health Care");
   },
 };
